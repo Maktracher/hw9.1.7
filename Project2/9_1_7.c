@@ -50,6 +50,15 @@ void populate_matrix_auto(MAT* mat) {
     }
 }
 
+// Function to test positive definiteness of a matrix using Cholesky decomposition
+char mat_test_positive_definiteness(MAT* mat) {
+    if (mat->rows != mat->cols) {
+        return MAT_NOTPOSDEF; // Matrix must be square
+    }
+
+    
+}
+
 
 int main() {
     int size;
@@ -64,5 +73,7 @@ int main() {
 
     printf("Matrix A:\n");
     print_matrix(&mat);
+
+    
 
 }
