@@ -30,11 +30,28 @@ void free_matrix(MAT* mat) {
     free(mat->data);
 }
 
+// Function to print a matrix
+void print_matrix(MAT* mat) {
+    for (int i = 0; i < mat->rows; i++) {
+        for (int j = 0; j < mat->cols; j++) {
+            printf("%8.3f ", mat->data[i][j]);
+        }
+        printf("\n");
+    }
+}
+
 int main() {
     int size;
     printf("Enter the size n of the n x 2 matrix: ");
     scanf("%d", &size);
     printf("Enter the number of columns for the matrix: ");
     scanf("%d", &cols);
+   
+    MAT mat;
+    create_matrix(&mat, rows, cols);
+    
+
+    printf("Matrix A:\n");
+    print_matrix(&mat);
 
 }
