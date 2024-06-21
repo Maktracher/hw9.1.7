@@ -40,6 +40,17 @@ void print_matrix(MAT* mat) {
     }
 }
 
+
+// Function to fill a matrix automatically with random values
+void populate_matrix_auto(MAT* mat) {
+    for (int i = 0; i < mat->rows; i++) {
+        for (int j = 0; j < mat->cols; j++) {
+            mat->data[i][j] = rand() % 20 - 10; // Random values between -10 and 10
+        }
+    }
+}
+
+
 int main() {
     int size;
     printf("Enter the size n of the n x 2 matrix: ");
@@ -49,7 +60,7 @@ int main() {
    
     MAT mat;
     create_matrix(&mat, rows, cols);
-    
+    populate_matrix_auto(&mat);
 
     printf("Matrix A:\n");
     print_matrix(&mat);
