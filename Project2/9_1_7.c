@@ -13,10 +13,28 @@ typedef struct {
     double** data;
 } MAT;
 
+// Function to create a matrix and allocate memory
+void create_matrix(MAT* mat, int rows, int cols) {
+    mat->rows = rows;
+    mat->cols = cols;
+    mat->data = (double**)malloc(rows * sizeof(double*));
+    for (int i = 0; i < rows; i++) {
+        mat->data[i] = (double*)malloc(cols * sizeof(double));
+    }
+}
+// Function to free the allocated memory of a matrix
+void free_matrix(MAT* mat) {
+    for (int i = 0; i < mat->rows; i++) {
+        free(mat->data[i]);
+    }
+    free(mat->data);
+}
 
 int main() {
     int size;
-    printf("¬ведите размер n матрицы n x 2: ");
+    printf("Enter the size n of the n x 2 matrix: ");
     scanf("%d", &size);
+    printf("Enter the number of columns for the matrix: ");
+    scanf("%d", &cols);
 
 }
