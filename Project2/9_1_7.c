@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+
 #pragma warning(disable:4996)
 
 #define MAT_POSDEF 1
@@ -22,6 +23,7 @@ void create_matrix(MAT* mat, int rows, int cols) {
         mat->data[i] = (double*)malloc(cols * sizeof(double));
     }
 }
+
 // Function to free the allocated memory of a matrix
 void free_matrix(MAT* mat) {
     for (int i = 0; i < mat->rows; i++) {
@@ -40,7 +42,6 @@ void print_matrix(MAT* mat) {
     }
 }
 
-
 // Function to fill a matrix automatically with random values
 void populate_matrix_auto(MAT* mat) {
     for (int i = 0; i < mat->rows; i++) {
@@ -56,17 +57,42 @@ char mat_test_positive_definiteness(MAT* mat) {
         return MAT_NOTPOSDEF; // Matrix must be square
     }
 
-    
+    int n = mat->rows;
+    double** A = mat->data;
+    MAT L;
+    create_matrix(&L, n, n); // Create a matrix for the lower triangular decomposition
+
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < (i + 1); j++) {
+            double sum = 0;
+
+            for (int k = 0; k < j; k++)
+                sum += L.data[i][k] * L.data[j][k];
+
+            if (i == j) // Diagonal elements
+                L.data[i][j] = sqrt(A[i][i] - sum);
+            else // Non-diagonal elements
+                L.data[i][j] = (1.0 / L.data[j][j] * (A[i][j] - sum));
+        }
+
+        if (L.data[i][i] <= 0) {
+            free_matrix(&L);
+            return (L.data[i][i] == 0) ? MAT_POSSEMDEF : MAT_NOTPOSDEF;
+        }
+    }
+
+    free_matrix(&L);
+    return MAT_POSDEF;
 }
 
-
+// Main function
 int main() {
-    int size;
-    printf("Enter the size n of the n x 2 matrix: ");
-    scanf("%d", &size);
+    int rows, cols;
+    printf("Enter the number of rows for the matrix: ");
+    scanf("%d", &rows);
     printf("Enter the number of columns for the matrix: ");
     scanf("%d", &cols);
-   
+
     MAT mat;
     create_matrix(&mat, rows, cols);
     populate_matrix_auto(&mat);
@@ -74,6 +100,15 @@ int main() {
     printf("Matrix A:\n");
     print_matrix(&mat);
 
-    
+    char result = mat_test_positive_definiteness(&mat);
+    if (result == MAT_POSDEF)
+        printf("The matrix is positive definite\n");
+    else if (result == MAT_POSSEMDEF)
+        printf("The matrix is positive semidefinite\n");
+    else
+        printf("The matrix is not positive definite\n");
 
+    free_matrix(&mat);
+
+    return 0;
 }
