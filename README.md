@@ -1,94 +1,212 @@
 
+```markdown
+# Projekt na prácu s maticami
 
-### Overview
+Tento projekt je určený na prácu s maticami vrátane automatického vypĺňania, tlače a testovania matice na pozitívnu definitnosť.
 
-This project provides a C program to test the positive definiteness of a matrix using Cholesky decomposition. It allows for matrix creation, automatic population with random values, and determination of whether a matrix is positive definite, positive semidefinite, or not positive definite.
+## Štruktúra projektu
 
-### Features
+Projekt pozostáva z troch hlavných súborov:
 
-- **Matrix Creation**: Dynamically allocate memory for matrices.
-- **Automatic Matrix Population**: Fill matrices with random values.
-- **Matrix Printing**: Print matrices to the console.
-- **Positive Definiteness Test**: Check if a matrix is positive definite using Cholesky decomposition.
+- `main.c`: Hlavný súbor, ktorý obsahuje funkciu `main` pre spustenie programu a interakciu s používateľom.
+- `matrix.c`: Súbor, ktorý obsahuje definície funkcií na prácu s maticami.
+- `matrix.h`: Hlavičkový súbor, ktorý obsahuje deklarácie funkcií a typov, ktoré sa používajú v `matrix.c`.
 
-### Files
+## Obsah súborov
 
-- `matrix_posdef_test.c`: Contains all the source code, including functions for matrix handling and positive definiteness testing.
+### `main.c`
 
-### Dependencies
+```c
+#include <stdio.h>
+#include "matrix.h"
 
-- C Standard Library (`<stdio.h>`, `<stdlib.h>`, `<math.h>`)
+void clear_input_buffer() {
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF) {}
+}
 
-### Usage
+int main() {
+    int rows, cols;
+    printf("Enter the number of rows for the matrix: ");
+    scanf("%d", &rows);
+    clear_input_buffer();
+    printf("Enter the number of columns for the matrix: ");
+    scanf("%d", &cols);
+    clear_input_buffer();
 
-1. **Clone the Repository**:
-   ```sh
-   git clone https://github.com/username/positive-definiteness.git
-   cd positive-definiteness
-   ```
+    MAT mat;
+    create_matrix(&mat, rows, cols);
+    populate_matrix_auto(&mat);
 
-2. **Compile the Program**:
-   ```sh
-   gcc -o matrix_posdef_test matrix_posdef_test.c -lm
-   ```
+    printf("Matrix A:\n");
+    print_matrix(&mat);
 
-3. **Run the Program**:
-   ```sh
-   ./matrix_posdef_test
-   ```
+    char result = mat_test_positive_definiteness(&mat);
+    if (result == MAT_POSDEF)
+        printf("The matrix is positive definite\n");
+    else if (result == MAT_POSSEMDEF)
+        printf("The matrix is positive semidefinite\n");
+    else
+        printf("The matrix is not positive definite\n");
 
-4. **Follow Prompts**:
-   - Enter the number of rows and columns when prompted.
-   - The program will generate a random matrix, print it, and determine its positive definiteness.
+    free_matrix(&mat);
 
-### Functions
+    printf("Stlačte Enter pre pokračovanie...");
+    getchar();
 
-#### `void create_matrix(MAT* mat, int rows, int cols)`
+    return 0;
+}
+```
 
-Allocates memory for a matrix with specified dimensions.
+### `matrix.c`
 
-- `MAT* mat`: Pointer to the matrix structure.
-- `int rows`: Number of rows.
-- `int cols`: Number of columns.
+```c
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+#include "matrix.h"
 
-#### `void free_matrix(MAT* mat)`
+void create_matrix(MAT* mat, int rows, int cols) {
+    mat->rows = rows;
+    mat->cols = cols;
+    mat->data = (double**)malloc(rows * sizeof(double*));
+    for (int i = 0; i < rows; i++) {
+        mat->data[i] = (double*)malloc(cols * sizeof(double));
+    }
+}
 
-Frees the memory allocated for a matrix.
+void free_matrix(MAT* mat) {
+    for (int i = 0; i < mat->rows; i++) {
+        free(mat->data[i]);
+    }
+    free(mat->data);
+}
 
-- `MAT* mat`: Pointer to the matrix structure.
+void print_matrix(MAT* mat) {
+    for (int i = 0; i < mat->rows; i++) {
+        for (int j = 0; j < mat->cols; j++) {
+            printf("%8.3f ", mat->data[i][j]);
+        }
+        printf("\n");
+    }
+}
 
-#### `void print_matrix(MAT* mat)`
+void populate_matrix_auto(MAT* mat) {
+    for (int i = 0; i < mat->rows; i++) {
+        for (int j = 0; j < mat->cols; j++) {
+            mat->data[i][j] = rand() % 20 - 10;
+        }
+    }
+}
 
-Prints the contents of a matrix to the console.
+char mat_test_positive_definiteness(MAT* mat) {
+    if (mat->rows != mat->cols) {
+        return MAT_NOTPOSDEF;
+    }
 
-- `MAT* mat`: Pointer to the matrix structure.
+    int n = mat->rows;
+    double** A = mat->data;
+    MAT L;
+    create_matrix(&L, n, n);
 
-#### `void populate_matrix_auto(MAT* mat)`
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < (i + 1); j++) {
+            double sum = 0;
 
-Fills the matrix with random values between -10 and 10.
+            for (int k = 0; k < j; k++)
+                sum += L.data[i][k] * L.data[j][k];
 
-- `MAT* mat`: Pointer to the matrix structure.
+            if (i == j)
+                L.data[i][j] = sqrt(A[i][i] - sum);
+            else
+                L.data[i][j] = (1.0 / L.data[j][j] * (A[i][j] - sum));
+        }
 
-#### `char mat_test_positive_definiteness(MAT* mat)`
+        if (L.data[i][i] <= 0) {
+            free_matrix(&L);
+            return (L.data[i][i] == 0) ? MAT_POSSEMDEF : MAT_NOTPOSDEF;
+        }
+    }
 
-Tests if a matrix is positive definite using Cholesky decomposition.
+    free_matrix(&L);
+    return MAT_POSDEF;
+}
+```
 
-- `MAT* mat`: Pointer to the matrix structure.
-- **Returns**:
-  - `MAT_POSDEF` (1): Positive definite
-  - `MAT_POSSEMDEF` (2): Positive semidefinite
-  - `MAT_NOTPOSDEF` (0): Not positive definite
+### `matrix.h`
 
-### Example
+```c
+#ifndef MATRIX_H
+#define MATRIX_H
+
+#define MAT_POSDEF 1
+#define MAT_POSSEMDEF 2
+#define MAT_NOTPOSDEF 0
+
+typedef struct {
+    int rows;
+    int cols;
+    double** data;
+} MAT;
+
+void create_matrix(MAT* mat, int rows, int cols);
+void free_matrix(MAT* mat);
+void print_matrix(MAT* mat);
+void populate_matrix_auto(MAT* mat);
+char mat_test_positive_definiteness(MAT* mat);
+
+#endif
+```
+
+## Inštrukcie na kompiláciu
+
+Na kompiláciu projektu použite `Makefile`. Použite nasledujúce príkazy na kompiláciu a spustenie programu:
+
+### Kompilácia projektu
 
 ```sh
-Enter the number of rows for the matrix: 3
-Enter the number of columns for the matrix: 3
-
-Matrix A:
-  5.000  -3.000   2.000 
- -3.000   5.000  -1.000 
-  2.000  -1.000   3.000 
-
-The matrix is positive definite
+mingw32-make
 ```
+
+### Vyčistenie projektu
+
+```sh
+mingw32-make clean
+```
+
+### Spustenie programu
+
+```sh
+./main
+```
+
+## Štruktúra `Makefile`
+
+```makefile
+# Makefile
+
+CC = gcc
+CFLAGS = -Wall -Wextra -std=c99 -O2
+LDFLAGS = -Wl,-subsystem,console
+
+# Všetky objektové súbory
+OBJ = main.o matrix.o
+
+# Cieľový súbor
+TARGET = main
+
+all: $(TARGET)
+
+$(TARGET): $(OBJ)
+	$(CC) -o $@ $^ $(LDFLAGS)
+
+main.o: main.c matrix.h
+	$(CC) $(CFLAGS) -c main.c
+
+matrix.o: matrix.c matrix.h
+	$(CC) $(CFLAGS) -c matrix.c
+
+clean:
+	rm -f $(OBJ) $(TARGET)
+```
+
