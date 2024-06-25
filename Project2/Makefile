@@ -4,10 +4,10 @@ CC = gcc
 CFLAGS = -Wall -Wextra -std=c99 -O2
 LDFLAGS = -Wl,-subsystem,console
 
-# Всі об'єктні файли
+# Všetky objektové súbory
 OBJ = main.o matrix.o
 
-# Цільовий файл
+# Cieľový súbor
 TARGET = main
 
 all: $(TARGET)
