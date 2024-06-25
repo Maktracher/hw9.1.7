@@ -19,21 +19,27 @@ int main() {
     create_matrix(&mat, rows, cols);
     populate_matrix_auto(&mat);
 
-    printf("Matrix A:\n");
+    printf("Matica A:\n");
     print_matrix(&mat);
 
-    char result = mat_test_positive_definiteness(&mat);
-    if (result == MAT_POSDEF)
-        printf("The matrix is positive definite\n");
-    else if (result == MAT_POSSEMDEF)
-        printf("The matrix is positive semidefinite\n");
-    else
-        printf("The matrix is not positive definite\n");
+    if (rows != cols) {
+        printf("Matica nie je štvorcová a nemôže byť testovaná na pozitívnu definitnosť.\n");
+    }
+    else {
+        char result = mat_test_positive_definiteness(&mat);
+        if (result == MAT_POSDEF)
+            printf("Matica je pozitívne definitná\n");
+        else if (result == MAT_POSSEMDEF)
+            printf("Matica je pozitívne semidefinitná\n");
+        else
+            printf("Matica nie je pozitívne definitná\n");
+    }
 
     free_matrix(&mat);
 
     printf("Stlačte Enter pre pokračovanie...");
-    getchar();  
+    getchar();
+
 
     return 0;
 }
