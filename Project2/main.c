@@ -1,45 +1,72 @@
 ﻿#include <stdio.h>
 #include "matrix.h"
 
-void clear_input_buffer() {
-    int c;
-    while ((c = getchar()) != '\n' && c != EOF) {}
-}
-
 int main() {
-    int rows, cols;
+    unsigned int rows, cols;
     printf("Enter the number of rows for the matrix: ");
-    scanf("%d", &rows);
-    clear_input_buffer();
+    scanf("%u", &rows);
     printf("Enter the number of columns for the matrix: ");
-    scanf("%d", &cols);
-    clear_input_buffer();
+    scanf("%u", &cols);
 
-    MAT mat;
-    create_matrix(&mat, rows, cols);
-    populate_matrix_auto(&mat);
+    // Create matrix and initialize with random values
+    MAT* mat = mat_create_with_type(rows, cols);
+    if (mat == NULL) {
+        fprintf(stderr, "Error: Failed to create matrix\n");
+        return 1;
+    }
 
-    printf("Matica A:\n");
-    print_matrix(&mat);
+    mat_random(mat);
 
-    if (rows != cols) {
-        printf("Matica nie je štvorcová a nemôže byť testovaná na pozitívnu definitnosť.\n");
+    // Print randomly initialized matrix
+    printf("Randomly initialized matrix:\n");
+    mat_print(mat);
+
+    // Test positive definiteness
+    char result = mat_test_positive_definiteness(mat);
+    if (result) {
+        printf("The matrix is positive definite.\n");
     }
     else {
-        char result = mat_test_positive_definiteness(&mat);
-        if (result == MAT_POSDEF)
-            printf("Matica je pozitívne definitná\n");
-        else if (result == MAT_POSSEMDEF)
-            printf("Matica je pozitívne semidefinitná\n");
-        else
-            printf("Matica nie je pozitívne definitná\n");
+        printf("The matrix is not positive definite.\n");
     }
 
-    free_matrix(&mat);
+    // Save matrix to file
+    char filename[] = "matrix.dat";
+    printf("Saving matrix to file '%s'...\n", filename);
+    if (mat_save(mat, filename)) {
+        printf("Matrix saved successfully.\n");
+    }
+    else {
+        fprintf(stderr, "Error: Failed to save matrix to file.\n");
+    }
 
-    printf("Stlačte Enter pre pokračovanie...");
+    // Load matrix from file
+    printf("Loading matrix from file '%s'...\n", filename);
+    MAT* loaded_mat = mat_create_by_file(filename);
+    if (loaded_mat == NULL) {
+        fprintf(stderr, "Error: Failed to load matrix from file.\n");
+    }
+    else {
+        printf("Loaded matrix:\n");
+        mat_print(loaded_mat);
+
+        // Test positive definiteness
+        result = mat_test_positive_definiteness(loaded_mat);
+        if (result) {
+            printf("The loaded matrix is positive definite.\n");
+        }
+        else {
+            printf("The loaded matrix is not positive definite.\n");
+        }
+
+        // Clean up
+        mat_destroy(loaded_mat);
+    }
+
+    mat_destroy(mat);
+
+    printf("Press Enter to exit the program...\n");
     getchar();
-
-
+    getchar();
     return 0;
 }

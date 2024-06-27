@@ -1,84 +1,165 @@
 ﻿#include "matrix.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
 
-// Function to create a matrix and allocate memory
-void create_matrix(MAT* mat, int rows, int cols) {
+// Helper function to access matrix elements
+#define ELEM(mat, i, j) (mat->elem[(i) * mat->cols + (j)])
+
+MAT* mat_create_with_type(unsigned int rows, unsigned int cols) {
+    MAT* mat = (MAT*)malloc(sizeof(MAT));
+    if (mat == NULL) {
+        fprintf(stderr, "Error: Failed to allocate memory for MAT structure\n");
+        return NULL;
+    }
+
     mat->rows = rows;
     mat->cols = cols;
-    mat->data = (MATRIX_TYPE**)malloc(rows * sizeof(MATRIX_TYPE*));
-    if (mat->data == NULL) {
-        fprintf(stderr, "Chyba alokácie pamäte\n");
-        exit(EXIT_FAILURE);
+    mat->elem = (float*)malloc(rows * cols * sizeof(float));
+    if (mat->elem == NULL) {
+        fprintf(stderr, "Error: Failed to allocate memory for matrix elements\n");
+        free(mat);
+        return NULL;
     }
-    for (int i = 0; i < rows; i++) {
-        mat->data[i] = (MATRIX_TYPE*)malloc(cols * sizeof(MATRIX_TYPE));
-        if (mat->data[i] == NULL) {
-            fprintf(stderr, "Chyba alokácie pamäte\n");
-            exit(EXIT_FAILURE);
+
+    return mat;
+}
+
+void mat_destroy(MAT* mat) {
+    if (mat != NULL) {
+        free(mat->elem);
+        free(mat);
+    }
+}
+
+void mat_unit(MAT* mat) {
+    if (mat == NULL || mat->elem == NULL) {
+        fprintf(stderr, "Error: NULL matrix or elements\n");
+        return;
+    }
+
+    unsigned int i, j;
+    for (i = 0; i < mat->rows; ++i) {
+        for (j = 0; j < mat->cols; ++j) {
+            ELEM(mat, i, j) = (i == j) ? 1.0 : 0.0;
         }
     }
 }
-// Function to free the allocated memory of a matrix
-void free_matrix(MAT* mat) {
-    for (int i = 0; i < mat->rows; i++) {
-        free(mat->data[i]);
+
+void mat_random(MAT* mat) {
+    if (mat == NULL || mat->elem == NULL) {
+        fprintf(stderr, "Error: NULL matrix or elements\n");
+        return;
     }
-    free(mat->data);
-    mat->data = NULL;
+
+    unsigned int i, j;
+    for (i = 0; i < mat->rows; ++i) {
+        for (j = 0; j < mat->cols; ++j) {
+            ELEM(mat, i, j) = ((float)rand() / RAND_MAX) * 2.0 - 1.0;
+        }
+    }
 }
 
-// Function to print a matrix
-void print_matrix(const MAT* mat) {
-    for (int i = 0; i < mat->rows; i++) {
-        for (int j = 0; j < mat->cols; j++) {
-            printf("%8.3f ", MAT_ELEM(mat, i, j));
+void mat_print(MAT* mat) {
+    if (mat == NULL || mat->elem == NULL) {
+        fprintf(stderr, "Error: NULL matrix or elements\n");
+        return;
+    }
+
+    unsigned int i, j;
+    for (i = 0; i < mat->rows; ++i) {
+        for (j = 0; j < mat->cols; ++j) {
+            printf("%8.3f ", ELEM(mat, i, j));
         }
         printf("\n");
     }
 }
 
-// Function to fill a matrix automatically with random values
-void populate_matrix_auto(MAT* mat) {
-    for (int i = 0; i < mat->rows; i++) {
-        for (int j = 0; j < mat->cols; j++) {
-            MAT_ELEM(mat, i, j) = rand() % 20 - 10; // Náhodné hodnoty medzi -10 a 10
-        }
+char mat_save(MAT* mat, char* filename) {
+    if (mat == NULL || mat->elem == NULL) {
+        fprintf(stderr, "Error: NULL matrix or elements\n");
+        return 0;
     }
+
+    FILE* file = fopen(filename, "wb");
+    if (file == NULL) {
+        fprintf(stderr, "Error: Failed to open file %s for writing\n", filename);
+        return 0;
+    }
+
+    // Write header "M1"
+    fwrite("M1", sizeof(char), 2, file);
+
+    // Write number of rows and columns
+    fwrite(&(mat->rows), sizeof(unsigned int), 1, file);
+    fwrite(&(mat->cols), sizeof(unsigned int), 1, file);
+
+    // Write matrix elements
+    fwrite(mat->elem, sizeof(float), mat->rows * mat->cols, file);
+
+    fclose(file);
+    return 1;
 }
 
-// Testovanie pozitívnej definitnosti matice
-char mat_test_positive_definiteness(const MAT* mat) {
-    if (mat->rows != mat->cols) {
-        fprintf(stderr, "Matica musí byť štvorcová pre testovanie pozitívnej definitnosti.\n");
-        return MAT_NOTPOSDEF; // Matica musí byť štvorcová
+MAT* mat_create_by_file(char* filename) {
+    FILE* file = fopen(filename, "rb");
+    if (file == NULL) {
+        fprintf(stderr, "Error: Failed to open file %s for reading\n", filename);
+        return NULL;
     }
 
-    int n = mat->rows;
-    MAT L;
-    create_matrix(&L, n, n); // Vytvorenie dolného trojuholníka pre Choleského rozklad
+    // Read and validate header "M1"
+    char header[2];
+    fread(header, sizeof(char), 2, file);
+    if (header[0] != 'M' || header[1] != '1') {
+        fprintf(stderr, "Error: Invalid file format\n");
+        fclose(file);
+        return NULL;
+    }
 
-    for (int i = 0; i < n; i++) {
-        for (int j = 0; j < (i + 1); j++) {
-            double sum = 0;
+    // Read number of rows and columns
+    unsigned int rows, cols;
+    fread(&rows, sizeof(unsigned int), 1, file);
+    fread(&cols, sizeof(unsigned int), 1, file);
 
-            for (int k = 0; k < j; k++)
-                sum += MAT_ELEM(&L, i, k) * MAT_ELEM(&L, j, k);
+    // Allocate memory for MAT structure and matrix elements
+    MAT* mat = mat_create_with_type(rows, cols);
+    if (mat == NULL) {
+        fprintf(stderr, "Error: Failed to create matrix structure\n");
+        fclose(file);
+        return NULL;
+    }
 
-            if (i == j) // Diagonálne prvky
-                MAT_ELEM(&L, i, j) = sqrt(MAT_ELEM(mat, i, i) - sum);
-            else // Nediagonálne prvky
-                MAT_ELEM(&L, i, j) = (1.0 / MAT_ELEM(&L, j, j) * (MAT_ELEM(mat, i, j) - sum));
+    // Read matrix elements
+    fread(mat->elem, sizeof(float), rows * cols, file);
+
+    fclose(file);
+    return mat;
+}
+
+char mat_test_positive_definiteness(MAT* mat) {
+    if (mat == NULL || mat->elem == NULL || mat->rows != mat->cols) {
+        fprintf(stderr, "Error: Invalid matrix or not square matrix\n");
+        return 0;
+    }
+
+    // Check positive definiteness
+    unsigned int n = mat->rows;
+    unsigned int i, j;
+    float sum;
+
+    // Check if all leading principal minors are positive
+    for (i = 1; i <= n; ++i) {
+        // Calculate determinant of the submatrix
+        sum = 0;
+        for (j = 0; j < i; ++j) {
+            sum += ELEM(mat, j, j); // Correctly access elements of mat
         }
 
-        if (MAT_ELEM(&L, i, i) <= 0) {
-            free_matrix(&L);
-            return (MAT_ELEM(&L, i, i) == 0) ? MAT_POSSEMDEF : MAT_NOTPOSDEF;
+        if (sum <= 0) {
+            return 0; // Not positive definite
         }
     }
 
-    free_matrix(&L);
-    return MAT_POSDEF;
+    return 1; // Matrix is positive definite
 }
 
