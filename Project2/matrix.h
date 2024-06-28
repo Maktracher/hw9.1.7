@@ -1,9 +1,7 @@
 ﻿#ifndef MATRIX_H
 #define MATRIX_H
 
-#define MAT_POSDEF 1
-#define MAT_POSSEMDEF 2
-#define MAT_NOTPOSDEF 0
+
 
 
 typedef struct {

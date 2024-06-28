@@ -136,28 +136,35 @@ MAT* mat_create_by_file(char* filename) {
 
 char mat_test_positive_definiteness(MAT* mat) {
     if (mat == NULL || mat->elem == NULL || mat->rows != mat->cols) {
-        
-        exit(1);
+        return 0; // Not positive definite
     }
 
-    // Check positive definiteness
     unsigned int n = mat->rows;
-    unsigned int i, j;
-    float sum;
 
-    // Check if all leading principal minors are positive
-    for (i = 1; i <= n; ++i) {
-        // Calculate determinant of the submatrix
-        sum = 0;
-        for (j = 0; j < i; ++j) {
-            sum += ELEM(mat, j, j); // Correctly access elements of mat
+    // Allocate memory for leading principal minors
+    float* submatrix = malloc(n * n * sizeof(float));
+    if (submatrix == NULL) {
+        return 0; // Not positive definite
+    }
+
+    // Check all leading principal minors
+    for (unsigned int size = 1; size <= n; size++) {
+        // Copy the leading size x size principal minor into submatrix
+        for (unsigned int i = 0; i < size; i++) {
+            for (unsigned int j = 0; j < size; j++) {
+                submatrix[i * size + j] = ELEM(mat, i, j);
+            }
         }
 
-        if (sum <= 0) {
+        // Calculate the determinant of the leading principal minor
+        float det = determinant(submatrix, size);
+        if (det <= 0) {
+            free(submatrix);
             return 0; // Not positive definite
         }
     }
 
+    free(submatrix);
     return 1; // Matrix is positive definite
 }
 
