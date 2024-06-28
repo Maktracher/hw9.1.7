@@ -8,7 +8,7 @@ MAT* mat_create_with_type(unsigned int rows, unsigned int cols) {
     MAT* mat = (MAT*)malloc(sizeof(MAT));
     if (mat == NULL) {
         
-        return NULL;
+        exit(1);
     }
 
     mat->rows = rows;
@@ -16,7 +16,7 @@ MAT* mat_create_with_type(unsigned int rows, unsigned int cols) {
     mat->elem = (float*)malloc(rows * cols * sizeof(float));
     if (mat->elem == NULL) {
         free(mat);
-        return NULL;
+        exit(1);
     }
 
     return mat;
@@ -32,7 +32,7 @@ void mat_destroy(MAT* mat) {
 void mat_unit(MAT* mat) {
     if (mat == NULL || mat->elem == NULL) {
         
-        return;
+        exit(1);
     }
 
     unsigned int i, j;
@@ -46,7 +46,7 @@ void mat_unit(MAT* mat) {
 void mat_random(MAT* mat) {
     if (mat == NULL || mat->elem == NULL) {
         
-        return;
+        exit(1);
     }
 
     unsigned int i, j;
@@ -60,7 +60,7 @@ void mat_random(MAT* mat) {
 void mat_print(MAT* mat) {
     if (mat == NULL || mat->elem == NULL) {
         
-        return;
+        exit(1);
     }
 
     unsigned int i, j;
@@ -75,13 +75,13 @@ void mat_print(MAT* mat) {
 char mat_save(MAT* mat, char* filename) {
     if (mat == NULL || mat->elem == NULL) {
         
-        return 0;
+        exit(1);
     }
 
     FILE* file = fopen(filename, "wb");
     if (file == NULL) {
         
-        return 0;
+        exit(1);
     }
 
     // Write header "M1"
@@ -102,7 +102,7 @@ MAT* mat_create_by_file(char* filename) {
     FILE* file = fopen(filename, "rb");
     if (file == NULL) {
         
-        return NULL;
+        exit(1);
     }
 
     // Read and validate header "M1"
@@ -111,7 +111,7 @@ MAT* mat_create_by_file(char* filename) {
     if (header[0] != 'M' || header[1] != '1') {
         
         fclose(file);
-        return NULL;
+        exit(1);
     }
 
     // Read number of rows and columns
@@ -124,7 +124,7 @@ MAT* mat_create_by_file(char* filename) {
     if (mat == NULL) {
         
         fclose(file);
-        return NULL;
+        exit(1);
     }
 
     // Read matrix elements
@@ -137,7 +137,7 @@ MAT* mat_create_by_file(char* filename) {
 char mat_test_positive_definiteness(MAT* mat) {
     if (mat == NULL || mat->elem == NULL || mat->rows != mat->cols) {
         
-        return 0;
+        exit(1);
     }
 
     // Check positive definiteness
