@@ -7,6 +7,9 @@ typedef struct {
     float* elem;
 } MAT;
 
+// Helper function to access matrix elements
+#define ELEM(mat, i, j) (mat->elem[(i) * mat->cols + (j)])
+
 MAT* mat_create_with_type(unsigned int rows, unsigned int cols);
 void mat_destroy(MAT* mat);
 void mat_unit(MAT* mat);

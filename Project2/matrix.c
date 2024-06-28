@@ -2,8 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-// Helper function to access matrix elements
-#define ELEM(mat, i, j) (mat->elem[(i) * mat->cols + (j)])
+
 
 MAT* mat_create_with_type(unsigned int rows, unsigned int cols) {
     MAT* mat = (MAT*)malloc(sizeof(MAT));
