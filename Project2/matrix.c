@@ -134,6 +134,40 @@ MAT* mat_create_by_file(char* filename) {
     return mat;
 }
 
+
+float determinant(float* matrix, unsigned int n) {
+    float det = 0.0;
+    if (n == 1) {
+        return matrix[0];
+    }
+    else if (n == 2) {
+        return matrix[0] * matrix[3] - matrix[1] * matrix[2];
+    }
+    else {
+        float* submatrix = malloc((n - 1) * (n - 1) * sizeof(float));
+        if (submatrix == NULL) {
+            exit(1);
+        }
+        for (unsigned int x = 0; x < n; x++) {
+            unsigned int subi = 0;
+            for (unsigned int i = 1; i < n; i++) {
+                unsigned int subj = 0;
+                for (unsigned int j = 0; j < n; j++) {
+                    if (j == x) continue;
+                    submatrix[subi * (n - 1) + subj] = matrix[i * n + j];
+                    subj++;
+                }
+                subi++;
+            }
+            float subdet = determinant(submatrix, n - 1);
+            det += (x % 2 == 0 ? 1 : -1) * matrix[x] * subdet;
+        }
+        free(submatrix);
+        return det;
+    }
+}
+
+
 char mat_test_positive_definiteness(MAT* mat) {
     if (mat == NULL || mat->elem == NULL || mat->rows != mat->cols) {
         return 0; // Not positive definite
