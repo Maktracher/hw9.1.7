@@ -1,6 +1,8 @@
 ﻿#include <stdio.h>
 #include "matrix.h"
 
+#pragma warning(disable:4996)
+
 int main() {
     unsigned int rows, cols;
     printf("Enter the number of rows for the matrix: ");

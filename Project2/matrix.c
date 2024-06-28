@@ -2,12 +2,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-
+#pragma warning(disable:4996)
 
 MAT* mat_create_with_type(unsigned int rows, unsigned int cols) {
     MAT* mat = (MAT*)malloc(sizeof(MAT));
     if (mat == NULL) {
-        fprintf(stderr, "Error: Failed to allocate memory for MAT structure\n");
+        
         return NULL;
     }
 
@@ -15,7 +15,6 @@ MAT* mat_create_with_type(unsigned int rows, unsigned int cols) {
     mat->cols = cols;
     mat->elem = (float*)malloc(rows * cols * sizeof(float));
     if (mat->elem == NULL) {
-        fprintf(stderr, "Error: Failed to allocate memory for matrix elements\n");
         free(mat);
         return NULL;
     }
@@ -32,7 +31,7 @@ void mat_destroy(MAT* mat) {
 
 void mat_unit(MAT* mat) {
     if (mat == NULL || mat->elem == NULL) {
-        fprintf(stderr, "Error: NULL matrix or elements\n");
+        
         return;
     }
 
@@ -46,7 +45,7 @@ void mat_unit(MAT* mat) {
 
 void mat_random(MAT* mat) {
     if (mat == NULL || mat->elem == NULL) {
-        fprintf(stderr, "Error: NULL matrix or elements\n");
+        
         return;
     }
 
@@ -60,7 +59,7 @@ void mat_random(MAT* mat) {
 
 void mat_print(MAT* mat) {
     if (mat == NULL || mat->elem == NULL) {
-        fprintf(stderr, "Error: NULL matrix or elements\n");
+        
         return;
     }
 
@@ -75,13 +74,13 @@ void mat_print(MAT* mat) {
 
 char mat_save(MAT* mat, char* filename) {
     if (mat == NULL || mat->elem == NULL) {
-        fprintf(stderr, "Error: NULL matrix or elements\n");
+        
         return 0;
     }
 
     FILE* file = fopen(filename, "wb");
     if (file == NULL) {
-        fprintf(stderr, "Error: Failed to open file %s for writing\n", filename);
+        
         return 0;
     }
 
@@ -102,7 +101,7 @@ char mat_save(MAT* mat, char* filename) {
 MAT* mat_create_by_file(char* filename) {
     FILE* file = fopen(filename, "rb");
     if (file == NULL) {
-        fprintf(stderr, "Error: Failed to open file %s for reading\n", filename);
+        
         return NULL;
     }
 
@@ -110,7 +109,7 @@ MAT* mat_create_by_file(char* filename) {
     char header[2];
     fread(header, sizeof(char), 2, file);
     if (header[0] != 'M' || header[1] != '1') {
-        fprintf(stderr, "Error: Invalid file format\n");
+        
         fclose(file);
         return NULL;
     }
@@ -123,7 +122,7 @@ MAT* mat_create_by_file(char* filename) {
     // Allocate memory for MAT structure and matrix elements
     MAT* mat = mat_create_with_type(rows, cols);
     if (mat == NULL) {
-        fprintf(stderr, "Error: Failed to create matrix structure\n");
+        
         fclose(file);
         return NULL;
     }
@@ -137,7 +136,7 @@ MAT* mat_create_by_file(char* filename) {
 
 char mat_test_positive_definiteness(MAT* mat) {
     if (mat == NULL || mat->elem == NULL || mat->rows != mat->cols) {
-        fprintf(stderr, "Error: Invalid matrix or not square matrix\n");
+        
         return 0;
     }
 
